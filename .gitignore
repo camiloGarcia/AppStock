@@ -1,0 +1,13 @@
+# Go build
+bin/
+*.exe
+*.out
+*.test
+
+# Env
+.env
+
+# Editor/IDE
+.vscode/
+.idea/
+.DS_Store
