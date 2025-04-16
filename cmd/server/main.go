@@ -4,6 +4,8 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 
 	"appstock/internal/api"
 	"appstock/internal/repository"
@@ -16,10 +18,26 @@ import (
 )
 
 func main() {
-	err := godotenv.Load()
+
+	// Obtener el directorio del ejecutable
+	exePath, err := os.Executable()
 	if err != nil {
-		log.Fatal("❌ Error loading .env file")
+		log.Fatalf("Error obteniendo la ruta del ejecutable: %v", err)
 	}
+	exeDir := filepath.Dir(exePath)
+
+	// Construir la ruta completa al archivo .env
+	envPath := filepath.Join(exeDir, ".env")
+
+	// Cargar las variables de entorno desde el archivo .env
+	if err := godotenv.Load(envPath); err != nil {
+		log.Fatalf("Error cargando el archivo .env: %v", err)
+	}
+
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	log.Fatal("❌ Error loading .env file")
+	// }
 
 	db.InitCockroach()
 
