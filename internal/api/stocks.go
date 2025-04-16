@@ -12,10 +12,12 @@ import (
 func GetStocks(w http.ResponseWriter, r *http.Request) {
 	pageParam := r.URL.Query().Get("page")
 	limitParam := r.URL.Query().Get("limit")
+	search := r.URL.Query().Get("search")
+	sortBy := r.URL.Query().Get("sortBy")
+	sortDir := r.URL.Query().Get("sortDir")
 
 	page := 1
 	limit := 10
-
 	if p, err := strconv.Atoi(pageParam); err == nil && p > 0 {
 		page = p
 	}
@@ -23,7 +25,7 @@ func GetStocks(w http.ResponseWriter, r *http.Request) {
 		limit = l
 	}
 
-	stocks, total, err := repository.GetStocksPaginatedWithCount(page, limit)
+	stocks, total, err := repository.GetStocksPaginatedWithCount(page, limit, search, sortBy, sortDir)
 	if err != nil {
 		http.Error(w, "Error fetching stocks", http.StatusInternalServerError)
 		return
