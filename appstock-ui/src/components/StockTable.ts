@@ -1,14 +1,15 @@
 import { ref, computed, onMounted, watch } from 'vue'
 
 export default function useStockTable() {
-  interface Stock {
+  type Stock = {
     ticker: string
     company: string
     brokerage: string
+    action: string
+    target_from: string
+    target_to: string
     rating_from: string
     rating_to: string
-    target_from: number
-    target_to: number
     time: string
   }
 
@@ -23,6 +24,9 @@ export default function useStockTable() {
   const sortBy = ref('')
   const sortDir = ref<'asc' | 'desc'>('asc')
 
+  const showModal = ref(false)
+  const selectedStock = ref<Stock | null>(null)
+
   const totalPages = computed(() => Math.ceil(total.value / limit))
 
   function setSort(column: string) {
@@ -32,6 +36,16 @@ export default function useStockTable() {
       sortBy.value = column
       sortDir.value = 'asc'
     }
+  }
+
+  function openStockModal(stock: Stock) {
+    selectedStock.value = stock
+    showModal.value = true
+  }
+
+  function closeStockModal() {
+    selectedStock.value = null
+    showModal.value = false
   }
 
   async function fetchStocks() {
@@ -50,6 +64,7 @@ export default function useStockTable() {
       const response = await fetch(url.toString())
       const data = await response.json()
       stocks.value = data.items
+      console.log('🔎 Items:', data.items)
       total.value = data.total
     } catch (error) {
       console.error('❌ Error fetching stocks:', error)
@@ -58,7 +73,16 @@ export default function useStockTable() {
     }
   }
 
-  watch([page, searchTerm, sortBy, sortDir], fetchStocks)
+  // watch([page, searchTerm, sortBy, sortDir], fetchStocks)
+  // 👇 Reiniciar página al cambiar el término de búsqueda
+  watch(searchTerm, () => {
+    page.value = 1
+    fetchStocks()
+  })
+
+  // 👇 Ejecutar fetch cuando cambian página u orden
+  watch([page, sortBy, sortDir], fetchStocks)
+  
   onMounted(fetchStocks)
 
   return {
@@ -70,6 +94,10 @@ export default function useStockTable() {
     sortBy,
     sortDir,
     setSort,
-    fetchStocks
+    fetchStocks,
+    showModal,
+    selectedStock,
+    openStockModal,
+    closeStockModal
   }
 }
