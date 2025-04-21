@@ -60,6 +60,7 @@ func main() {
 	// Servidor API
 	r := mux.NewRouter()
 	r.HandleFunc("/stocks", api.GetStocks).Methods("GET")
+	r.HandleFunc("/recommendation", api.RecommendMultipleStocks)
 
 	log.Println("✅ Server running on :8080")
 	cors := handlers.CORS(
