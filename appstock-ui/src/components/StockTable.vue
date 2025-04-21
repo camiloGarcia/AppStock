@@ -85,7 +85,17 @@
           <td class="px-4 py-2">{{ stock.target_to }}</td>
           <td class="px-4 py-2">{{ stock.rating_from }}</td>
           <td class="px-4 py-2">{{ stock.rating_to }}</td>
-          <td class="px-4 py-2">{{ stock.time }}</td>
+          <!-- <td class="px-4 py-2">{{ stock.time }}</td> -->
+          <td class="px-4 py-2">
+  {{
+    new Intl.DateTimeFormat("es-CO", {
+      dateStyle: "medium",
+      timeStyle: "medium",
+      timeZone: "America/Bogota"
+    }).format(new Date(stock.time))
+  }}
+</td>
+
         </tr>
       </tbody>
     </table>
@@ -125,7 +135,19 @@
           <p><strong>Target to:</strong> {{ selectedStock?.target_to }}</p>
           <p><strong>Rating from:</strong> {{ selectedStock?.rating_from }}</p>
           <p><strong>Rating to:</strong> {{ selectedStock?.rating_to }}</p>
-          <p><strong>Time:</strong> {{ selectedStock?.time }}</p>
+          <!-- <p><strong>Time:</strong> {{ selectedStock?.time }}</p> -->
+          <p><strong>Time:</strong>
+  {{
+    selectedStock?.time
+      ? new Intl.DateTimeFormat("es-CO", {
+          dateStyle: "medium",
+          timeStyle: "medium",
+          timeZone: "America/Bogota"
+        }).format(new Date(selectedStock.time))
+      : ''
+  }}
+</p>
+
           <button
             @click="closeStockModal"
             class="mt-4 px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
@@ -142,21 +164,20 @@
     v-if="showRecommendedModal"
     class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
   >
+  
+   <!-- ❌ Botón fuera del contenedor blanco, arriba a la derecha -->
+   <button
+      @click="showRecommendedModal = false"
+      class="absolute top-4 right-4 text-white hover:text-red-500 transition z-50"
+      aria-label="Close"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+
   <div class="bg-white p-6 rounded-lg shadow-lg w-[90%] max-w-xl max-h-[80vh] overflow-y-auto relative">
-
- <!-- ❌ Botón cerrar fijo arriba a la derecha -->
-<button
-  @click="showRecommendedModal = false"
-  class="sticky top-0 float-right z-10 p-2 rounded-full text-gray-500 hover:text-red-600 transition"
-  aria-label="Close"
->
-  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
-    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-  </svg>
-</button>
-
-
 
 
       <h3 class="text-xl font-semibold mb-4 text-green-600">
@@ -173,7 +194,15 @@
             <p><strong>Action:</strong> {{ stock.action }}</p>
             <p><strong>Target:</strong> {{ stock.target_from }} → {{ stock.target_to }}</p>
             <p><strong>Rating:</strong> {{ stock.rating_from }} → {{ stock.rating_to }}</p>
-            <p><strong>Time:</strong> {{ new Date(stock.time).toLocaleString() }}</p>
+            <!-- <p><strong>Time:</strong> {{ new Date(stock.time).toLocaleString() }}</p> -->
+            <p><strong>Time:</strong> {{
+  new Intl.DateTimeFormat("es-CO", {
+    dateStyle: "medium",
+    timeStyle: "medium",
+    timeZone: "America/Bogota"
+  }).format(new Date(stock.time))
+}}</p>
+
           </li>
         </ul>
       </div>

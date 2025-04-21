@@ -43,43 +43,38 @@ func getRatingScore(from, to string) int {
 func RecommendMultipleStocks(w http.ResponseWriter, r *http.Request) {
 	// 🔍 Obtener y validar parámetro de fecha
 	dateStr := r.URL.Query().Get("date")
-	var filterDate time.Time
+	var localDate time.Time
+	var err error
+
 	if dateStr != "" {
-		var err error
-		filterDate, err = time.Parse("2006-01-02", dateStr)
+		localDate, err = time.Parse("2006-01-02", dateStr)
 		if err != nil {
 			http.Error(w, "Invalid date format", http.StatusBadRequest)
 			return
 		}
 	} else {
-		filterDate = time.Now()
+		localDate = time.Now()
 	}
 
-	// 🕒 Cargar zona horaria local
-	loc, err := time.LoadLocation("America/Bogota") // o tu zona horaria real
+	// 🕐 Cargar zona horaria local
+	loc, err := time.LoadLocation("America/Bogota")
 	if err != nil {
 		http.Error(w, "Failed to load timezone", http.StatusInternalServerError)
 		return
 	}
 
-	// 📦 Obtener todos los registros
-	stocks, err := repository.GetAllStocks()
+	// 🕓 Convertir a UTC rango [inicio, fin) del día en la zona local
+	startOfDay := time.Date(localDate.Year(), localDate.Month(), localDate.Day(), 0, 0, 0, 0, loc)
+	endOfDay := startOfDay.Add(24 * time.Hour)
+
+	startUTC := startOfDay.UTC()
+	endUTC := endOfDay.UTC()
+
+	// 📦 Obtener registros directamente en el rango UTC
+	stocks, err := repository.GetStocksByLocalDateRange(startUTC, endUTC)
 	if err != nil {
 		http.Error(w, "Failed to load stocks", http.StatusInternalServerError)
 		return
-	}
-
-	// 🧠 Filtrar por fecha local
-	var todaysStocks []model.Stock
-	for _, stock := range stocks {
-		parsed, err := time.Parse(time.RFC3339, stock.Time)
-		if err != nil {
-			continue
-		}
-		localDate := parsed.In(loc).Format("2006-01-02")
-		if localDate == filterDate.Format("2006-01-02") {
-			todaysStocks = append(todaysStocks, stock)
-		}
 	}
 
 	// 🧮 Calcular puntuación
@@ -88,7 +83,7 @@ func RecommendMultipleStocks(w http.ResponseWriter, r *http.Request) {
 		Score int
 	}
 	var scored []ScoredStock
-	for _, stock := range todaysStocks {
+	for _, stock := range stocks {
 		actionScore := getActionScore(stock.Action)
 		ratingScore := getRatingScore(stock.RatingFrom, stock.RatingTo)
 		targetScore := int(stock.TargetTo - stock.TargetFrom)

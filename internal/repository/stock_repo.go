@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"appstock/internal/model"
 	"appstock/pkg/db"
@@ -225,4 +226,59 @@ func GetStocksFiltered(page, limit int, search string) ([]model.Stock, int, erro
 		stocks = append(stocks, s)
 	}
 	return stocks, total, nil
+}
+
+func GetStocksByDate(date string) ([]model.Stock, error) {
+	query := `
+		SELECT ticker, company, brokerage, action,
+		       rating_from, rating_to, target_from, target_to, time
+		FROM stocks
+		WHERE time::date = $1
+		ORDER BY time DESC
+	`
+
+	rows, err := db.DB.Query(query, date)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var stocks []model.Stock
+	for rows.Next() {
+		var s model.Stock
+		err := rows.Scan(&s.Ticker, &s.Company, &s.Brokerage, &s.Action,
+			&s.RatingFrom, &s.RatingTo, &s.TargetFrom, &s.TargetTo, &s.Time)
+		if err != nil {
+			return nil, err
+		}
+		stocks = append(stocks, s)
+	}
+	return stocks, nil
+}
+
+func GetStocksByLocalDateRange(startUTC, endUTC time.Time) ([]model.Stock, error) {
+	query := `
+		SELECT ticker, company, brokerage, action,
+		       rating_from, rating_to, target_from, target_to, time
+		FROM stocks
+		WHERE time >= $1 AND time < $2
+		ORDER BY time DESC
+	`
+	rows, err := db.DB.Query(query, startUTC, endUTC)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var stocks []model.Stock
+	for rows.Next() {
+		var s model.Stock
+		err := rows.Scan(&s.Ticker, &s.Company, &s.Brokerage, &s.Action,
+			&s.RatingFrom, &s.RatingTo, &s.TargetFrom, &s.TargetTo, &s.Time)
+		if err != nil {
+			return nil, err
+		}
+		stocks = append(stocks, s)
+	}
+	return stocks, nil
 }
