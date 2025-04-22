@@ -23,8 +23,60 @@ AppStock es una aplicación fullstack que consume información bursátil desde u
 
 ## 🚀 Cómo ejecutar el proyecto
 
-### Backend
+### 1. ⚙️ Configurar variables sensibles
+
+Crea un archivo `backend.tfvars` en la carpeta `infrastructure/` con contenido similar a:
+
+```hcl
+ALLOWED_ORIGINS = "http://localhost:3000"
+STOCK_API_URL   = "{dominio}/production/swechallenge/list"
+STOCK_API_KEY   = "TU_API_KEY"
+CONN_STR        = "postgresql://usuario:contraseña@servidor.cockroachlabs.cloud:port/DB?sslmode=verify-full"
+```
+
+
+---
+
+### 2. 🔨 Construir imágenes Docker
+
+Desde la raíz del proyecto:
 
 ```bash
-cd AppStock
-go run ./cmd/server
+# Backend
+docker build -t appstock-backend:1.0.0 .
+
+# Frontend (pasando la URL del backend como build-arg)
+docker build -t appstock-frontend:1.0.0 --build-arg VITE_API_BASE_URL=http://localhost:9000 ./appstock-ui
+```
+
+---
+
+### 3. 🧱 Desplegar con Terraform
+
+```bash
+cd infrastructure
+terraform init
+terraform apply -var-file=backend.tfvars
+```
+
+---
+
+### 🌐 Acceder a la aplicación
+
+- Frontend: [http://localhost:3000](http://localhost:3000)
+- Backend API: [http://localhost:9000/stocks](http://localhost:9000/stocks)
+
+---
+
+## ✅ Estado actual
+
+- ✔️ Consulta de stocks paginada
+- ✔️ Filtro por texto
+- ✔️ Visualización de recomendaciones por fecha
+- ✔️ Despliegue automatizado con Terraform y Docker
+
+---
+
+## 📝 Licencia
+
+MIT

@@ -19,7 +19,6 @@ import (
 )
 
 func main() {
-
 	// Obtener el directorio del ejecutable
 	exePath, err := os.Executable()
 	if err != nil {
@@ -30,19 +29,19 @@ func main() {
 	// Construir la ruta completa al archivo .env
 	envPath := filepath.Join(exeDir, ".env")
 
-	// Cargar las variables de entorno desde el archivo .env
-	if err := godotenv.Load(envPath); err != nil {
-		log.Fatalf("Error cargando el archivo .env: %v", err)
+	// ⚠️ Cargar variables solo si el archivo .env existe (útil para entorno local)
+	if _, err := os.Stat(envPath); err == nil {
+		if err := godotenv.Load(envPath); err != nil {
+			log.Printf("⚠️ No se pudo cargar .env: %v", err)
+		} else {
+			log.Println("✅ Archivo .env cargado exitosamente.")
+		}
+	} else {
+		log.Println("ℹ️ Archivo .env no encontrado, se asume entorno de producción.")
 	}
-
-	// err := godotenv.Load()
-	// if err != nil {
-	// 	log.Fatal("❌ Error loading .env file")
-	// }
 
 	db.InitCockroach()
 
-	// Verificar si hay stocks ya guardados
 	hasData, err := repository.HasStocks()
 	if err != nil {
 		log.Fatal("❌ Error checking stock data:", err)
@@ -50,8 +49,7 @@ func main() {
 
 	if !hasData {
 		log.Println("📥 No stocks found in DB. Importing...")
-		err := service.FetchAndStoreAllStocks()
-		if err != nil {
+		if err := service.FetchAndStoreAllStocks(); err != nil {
 			log.Fatal("❌ Error fetching stock data:", err)
 		}
 	} else {
@@ -64,9 +62,10 @@ func main() {
 	r.HandleFunc("/recommendation", api.RecommendMultipleStocks)
 
 	log.Println("✅ Server running on :8080")
-	// Por esto dinámico:
+
+	// Obtener origen permitido desde variable de entorno
 	origins := os.Getenv("ALLOWED_ORIGINS")
-	allowedOrigins := []string{"http://localhost:5173"} // default
+	allowedOrigins := []string{"http://localhost:5173"} // valor por defecto
 
 	if origins != "" {
 		allowedOrigins = splitAndTrim(origins)

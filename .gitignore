@@ -6,6 +6,13 @@ bin/
 
 # Env
 .env
+*.env
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+*.tfvars
 
 # Editor/IDE
 .vscode/
