@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"appstock/internal/api"
 	"appstock/internal/repository"
@@ -63,11 +64,28 @@ func main() {
 	r.HandleFunc("/recommendation", api.RecommendMultipleStocks)
 
 	log.Println("✅ Server running on :8080")
+	// Por esto dinámico:
+	origins := os.Getenv("ALLOWED_ORIGINS")
+	allowedOrigins := []string{"http://localhost:5173"} // default
+
+	if origins != "" {
+		allowedOrigins = splitAndTrim(origins)
+	}
+
 	cors := handlers.CORS(
-		handlers.AllowedOrigins([]string{"http://localhost:5173"}),
+		handlers.AllowedOrigins(allowedOrigins),
 		handlers.AllowedMethods([]string{"GET", "POST", "OPTIONS"}),
 		handlers.AllowedHeaders([]string{"Content-Type"}),
 	)
 
 	log.Fatal(http.ListenAndServe(":8080", cors(r)))
+}
+
+func splitAndTrim(s string) []string {
+	parts := strings.Split(s, ",")
+	var trimmed []string
+	for _, p := range parts {
+		trimmed = append(trimmed, strings.TrimSpace(p))
+	}
+	return trimmed
 }
