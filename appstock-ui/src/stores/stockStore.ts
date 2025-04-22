@@ -1,64 +1,38 @@
-import { ref, computed, onMounted, watch } from 'vue'
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
 
-export default function useStockTable() {
-  type Stock = {
-    ticker: string
-    company: string
-    brokerage: string
-    action: string
-    target_from: string
-    target_to: string
-    rating_from: string
-    rating_to: string
-    time: string
-  }
+type Stock = {
+  ticker: string
+  company: string
+  brokerage: string
+  action: string
+  target_from: string
+  target_to: string
+  rating_from: string
+  rating_to: string
+  time: string
+}
 
+export const useStockStore = defineStore('stock', () => {
   const API_BASE = import.meta.env.VITE_API_BASE_URL
 
-  // Estado principal
   const stocks = ref<Stock[]>([])
-  const loading = ref(true)
+  const loading = ref(false)
   const page = ref(1)
   const limit = 10
   const total = ref(0)
-  const totalPages = computed(() => Math.ceil(total.value / limit))
-
-  // Filtros y ordenamiento
   const searchTerm = ref('')
   const sortBy = ref('')
   const sortDir = ref<'asc' | 'desc'>('asc')
 
-  // Modal de detalle
   const showModal = ref(false)
   const selectedStock = ref<Stock | null>(null)
 
-  // Modal de recomendación por fecha
   const recommendationDate = ref(new Date().toISOString().substring(0, 10))
   const recommendedStocks = ref<Stock[]>([])
   const showRecommendedModal = ref(false)
 
-  // Modal (única recomendación - no usada en este flujo)
-  const recommendedStock = ref<Stock | null>(null)
-  const showRecommendation = ref(false)
-
-  function setSort(column: string) {
-    if (sortBy.value === column) {
-      sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
-    } else {
-      sortBy.value = column
-      sortDir.value = 'asc'
-    }
-  }
-
-  function openStockModal(stock: Stock) {
-    selectedStock.value = stock
-    showModal.value = true
-  }
-
-  function closeStockModal() {
-    selectedStock.value = null
-    showModal.value = false
-  }
+  const totalPages = computed(() => Math.ceil(total.value / limit))
 
   async function fetchStocks() {
     loading.value = true
@@ -66,11 +40,9 @@ export default function useStockTable() {
       const url = new URL(`${API_BASE}/stocks`)
       url.searchParams.append('page', page.value.toString())
       url.searchParams.append('limit', limit.toString())
-
       if (searchTerm.value.trim()) {
         url.searchParams.append('search', searchTerm.value.trim())
       }
-
       if (sortBy.value) {
         url.searchParams.append('sortBy', sortBy.value)
         url.searchParams.append('sortDir', sortDir.value)
@@ -85,21 +57,6 @@ export default function useStockTable() {
     } finally {
       loading.value = false
     }
-  }
-
-  async function fetchRecommendation() {
-    try {
-      const response = await fetch(`${API_BASE}/recommendation`)
-      if (response.ok) {
-        recommendedStock.value = await response.json()
-      }
-    } catch (err) {
-      console.error('❌ Error fetching recommendation:', err)
-    }
-  }
-
-  function toggleRecommendation() {
-    showRecommendation.value = !showRecommendation.value
   }
 
   async function fetchRecommendationsByDate() {
@@ -117,40 +74,45 @@ export default function useStockTable() {
     }
   }
 
-  // Reacción a cambios de filtros
-  watch(searchTerm, () => {
-    page.value = 1
-    fetchStocks()
-  })
+  function setSort(column: string) {
+    if (sortBy.value === column) {
+      sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
+    } else {
+      sortBy.value = column
+      sortDir.value = 'asc'
+    }
+  }
 
-  watch([page, sortBy, sortDir], fetchStocks)
-
-  onMounted(() => {
-    fetchStocks()
-    //  fetchRecommendation()
-  })
+  function openStockModal(stock: Stock) {
+    selectedStock.value = stock
+    showModal.value = true
+  }
+  
+  function closeStockModal() {
+    selectedStock.value = null
+    showModal.value = false
+  }
+  
 
   return {
     stocks,
     loading,
     page,
-    totalPages,
+    limit,
+    total,
     searchTerm,
     sortBy,
     sortDir,
-    setSort,
-    fetchStocks,
     showModal,
     selectedStock,
-    openStockModal,
-    closeStockModal,
-    recommendedStock,
-    fetchRecommendation,
-    showRecommendation,
-    toggleRecommendation,
     recommendationDate,
-    fetchRecommendationsByDate,
     recommendedStocks,
     showRecommendedModal,
+    totalPages,
+    fetchStocks,
+    fetchRecommendationsByDate,
+    setSort,
+    openStockModal, // 👈 agregar
+    closeStockModal // 👈 agregar
   }
-}
+})
