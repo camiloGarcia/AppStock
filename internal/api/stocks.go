@@ -1,3 +1,4 @@
+// appstock/internal/api/stocks.go
 package api
 
 import (
@@ -8,6 +9,9 @@ import (
 	"appstock/internal/model"
 	"appstock/internal/repository"
 )
+
+// Delegable para test
+var getStocksWithCount = repository.GetStocksPaginatedWithCount
 
 func GetStocks(w http.ResponseWriter, r *http.Request) {
 	pageParam := r.URL.Query().Get("page")
@@ -25,7 +29,8 @@ func GetStocks(w http.ResponseWriter, r *http.Request) {
 		limit = l
 	}
 
-	stocks, total, err := repository.GetStocksPaginatedWithCount(page, limit, search, sortBy, sortDir)
+	// stocks, total, err := repository.GetStocksPaginatedWithCount(page, limit, search, sortBy, sortDir)
+	stocks, total, err := getStocksWithCount(page, limit, search, sortBy, sortDir)
 	if err != nil {
 		http.Error(w, "Error fetching stocks", http.StatusInternalServerError)
 		return

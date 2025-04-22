@@ -11,6 +11,14 @@ import (
 	"time"
 )
 
+// 🔁 Hook para tests — se puede sobrescribir en tests
+var getStocksByLocalDateRangeMock func(time.Time, time.Time) ([]model.Stock, error)
+
+// 🔧 Inicializa el hook con la función real
+func init() {
+	getStocksByLocalDateRangeMock = repository.GetStocksByLocalDateRange
+}
+
 // Define una función para obtener la "puntuación" de una acción
 func getActionScore(action string) int {
 	switch strings.ToLower(action) {
@@ -71,7 +79,9 @@ func RecommendMultipleStocks(w http.ResponseWriter, r *http.Request) {
 	endUTC := endOfDay.UTC()
 
 	// 📦 Obtener registros directamente en el rango UTC
-	stocks, err := repository.GetStocksByLocalDateRange(startUTC, endUTC)
+	// stocks, err := repository.GetStocksByLocalDateRange(startUTC, endUTC)
+	stocks, err := getStocksByLocalDateRangeMock(startUTC, endUTC)
+
 	if err != nil {
 		http.Error(w, "Failed to load stocks", http.StatusInternalServerError)
 		return

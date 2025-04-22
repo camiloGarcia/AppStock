@@ -11,7 +11,7 @@ import (
 	"appstock/pkg/db"
 )
 
-func SaveStock(s model.Stock) error {
+var SaveStock = func(s model.Stock) error {
 	query := `
 		INSERT INTO stocks (
 			ticker, company, brokerage, action,
